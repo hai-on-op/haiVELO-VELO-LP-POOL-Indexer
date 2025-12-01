@@ -1,6 +1,6 @@
 # haiVELO Pool Graph
 
-A sqd.ai (Subsquid) indexer for the Velodrome haiVELO pool on Optimism.
+A sqd.ai (Subsquid) indexer for the Velodrome haiVELO-VELO pool on Optimism.
 
 **Contract**: `0x5535Cdc333FC8f08f6183e7064202C3917E9346C`
 
@@ -169,7 +169,7 @@ npm run down
 The indexer starts from block 120,000,000. To change this, edit `src/processor.ts`:
 
 ```typescript
-const START_BLOCK = 120_000_000;
+const START_BLOCK = 141_576_327;
 ```
 
 ## License

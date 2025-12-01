@@ -1,0 +1,123 @@
+# Pool aggregate entity - tracks overall pool state
+type Pool @entity {
+  id: ID!
+  address: String! @index
+  token0: String!
+  token1: String!
+  reserve0: BigInt!
+  reserve1: BigInt!
+  totalSupply: BigInt!
+  totalSwapCount: BigInt!
+  totalMintCount: BigInt!
+  totalBurnCount: BigInt!
+  totalClaimCount: BigInt!
+  totalFeesCount: BigInt!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+# ============================================
+# EVENT ENTITIES - All events are queryable
+# ============================================
+
+# Swap event - when tokens are swapped
+type SwapEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  sender: String! @index
+  to: String! @index
+  amount0In: BigInt!
+  amount1In: BigInt!
+  amount0Out: BigInt!
+  amount1Out: BigInt!
+}
+
+# Mint event - when liquidity is added
+type MintEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  sender: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+}
+
+# Burn event - when liquidity is removed
+type BurnEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  sender: String! @index
+  to: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+}
+
+# Sync event - when reserves are updated
+type SyncEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  reserve0: BigInt!
+  reserve1: BigInt!
+}
+
+# Fees event - when fees are collected
+type FeesEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  sender: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+}
+
+# Claim event - when fees are claimed by LPs
+type ClaimEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  sender: String! @index
+  recipient: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+}
+
+# Transfer event - ERC20 LP token transfers
+type TransferEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  from: String! @index
+  to: String! @index
+  amount: BigInt!
+}
+
+# Approval event - ERC20 LP token approvals
+type ApprovalEvent @entity {
+  id: ID!
+  txHash: String! @index
+  blockNumber: Int! @index
+  logIndex: Int!
+  timestamp: DateTime! @index
+  owner: String! @index
+  spender: String! @index
+  amount: BigInt!
+}
+
+

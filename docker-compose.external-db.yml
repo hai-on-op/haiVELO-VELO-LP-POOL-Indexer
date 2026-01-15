@@ -1,0 +1,45 @@
+# Production docker-compose with external PostgreSQL
+# For when you already have a PostgreSQL database running
+# Usage: docker compose -f docker-compose.external-db.yml up -d
+
+services:
+  # Indexer processor
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: haivelo-indexer
+    restart: unless-stopped
+    command: ["node", "lib/main.js"]
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - RPC_OPTIMISM_HTTP=${RPC_OPTIMISM_HTTP:-https://mainnet.optimism.io}
+    # Use host network to access local PostgreSQL, or configure accordingly
+    # network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # GraphQL API server
+  graphql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: haivelo-graphql
+    restart: unless-stopped
+    command: ["node", "node_modules/.bin/squid-graphql-server"]
+    ports:
+      - "${GQL_PORT:-4000}:4000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+

@@ -1,0 +1,74 @@
+# Production docker-compose
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  # Indexer processor
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: haivelo-indexer
+    restart: unless-stopped
+    command: ["node", "lib/main.js"]
+    environment:
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-squid}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
+      - RPC_OPTIMISM_HTTP=${RPC_OPTIMISM_HTTP:-https://mainnet.optimism.io}
+    depends_on:
+      - db
+    networks:
+      - haivelo-network
+
+  # GraphQL API server
+  graphql:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: haivelo-graphql
+    restart: unless-stopped
+    command: ["node", "node_modules/.bin/squid-graphql-server"]
+    ports:
+      - "${GQL_PORT:-4000}:4000"
+    environment:
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-squid}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
+    depends_on:
+      - db
+    networks:
+      - haivelo-network
+
+  # PostgreSQL database (remove if using external DB)
+  db:
+    image: postgres:15-alpine
+    container_name: haivelo-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-squid}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASS:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_EXTERNAL_PORT:-5432}:5432"
+    networks:
+      - haivelo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-squid}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  haivelo-network:
+    driver: bridge
+
+

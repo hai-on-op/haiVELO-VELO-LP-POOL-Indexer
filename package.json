@@ -12,7 +12,12 @@
     "migration:generate": "squid-typeorm-migration generate",
     "migration:apply": "squid-typeorm-migration apply",
     "up": "docker compose up -d",
-    "down": "docker compose down"
+    "down": "docker compose down",
+    "prod:up": "docker compose -f docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "prod:external-db": "docker compose -f docker-compose.external-db.yml up -d --build",
+    "prod:migrate": "npm run build && npm run migration:apply"
   },
   "dependencies": {
     "@subsquid/evm-abi": "^0.3.1",

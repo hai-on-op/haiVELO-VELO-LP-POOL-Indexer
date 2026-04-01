@@ -1,4 +1,5 @@
 services:
+  # PostgreSQL database
   db:
     image: postgres:15
     environment:
@@ -8,8 +9,58 @@ services:
       - "23798:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d squid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Database migrations (runs once then exits)
+  migration:
+    build: .
+    command: ["npx", "squid-typeorm-migration", "apply"]
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=squid
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Indexer processor
+  indexer:
+    build: .
+    command: ["node", "lib/main.js"]
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=squid
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - RPC_OPTIMISM_HTTP=${RPC_OPTIMISM_HTTP:-https://mainnet.optimism.io}
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # GraphQL API server
+  graphql:
+    build: .
+    command: ["npx", "squid-graphql-server"]
+    ports:
+      - "${GQL_PORT:-4000}:4000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=squid
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   db_data:
-
-

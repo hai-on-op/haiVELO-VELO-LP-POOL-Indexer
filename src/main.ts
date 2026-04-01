@@ -33,6 +33,7 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
   let feesCount = 0n;
   let lastReserve0 = 0n;
   let lastReserve1 = 0n;
+  let totalSupplyDelta = 0n;
   let lastTimestamp = new Date();
 
   for (const block of ctx.blocks) {
@@ -159,6 +160,18 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
       // Handle Transfer event
       else if (log.topics[0] === poolAbi.events.Transfer.topic) {
         const decoded = poolAbi.events.Transfer.decode(log);
+        const from = decoded.from.toLowerCase();
+        const to = decoded.to.toLowerCase();
+        const amount = decoded.amount;
+
+        // Track totalSupply: mint (from zero) increases, burn (to zero) decreases
+        const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+        if (from === ZERO_ADDRESS) {
+          totalSupplyDelta += amount;
+        } else if (to === ZERO_ADDRESS) {
+          totalSupplyDelta -= amount;
+        }
+
         transferEvents.push(
           new TransferEvent({
             id: eventId,
@@ -166,9 +179,9 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
             blockNumber: block.header.height,
             logIndex: log.logIndex,
             timestamp,
-            from: decoded.from.toLowerCase(),
-            to: decoded.to.toLowerCase(),
-            amount: decoded.amount,
+            from,
+            to,
+            amount,
           })
         );
       }
@@ -211,7 +224,8 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
     burnCount > 0 ||
     claimCount > 0 ||
     feesCount > 0 ||
-    lastReserve0 > 0
+    lastReserve0 > 0 ||
+    totalSupplyDelta !== 0n
   ) {
     let pool = await ctx.store.get(Pool, POOL_ADDRESS);
 
@@ -243,6 +257,10 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
     if (lastReserve0 > 0) {
       pool.reserve0 = lastReserve0;
       pool.reserve1 = lastReserve1;
+    }
+
+    if (totalSupplyDelta !== 0n) {
+      pool.totalSupply += totalSupplyDelta;
     }
 
     pool.updatedAt = lastTimestamp;

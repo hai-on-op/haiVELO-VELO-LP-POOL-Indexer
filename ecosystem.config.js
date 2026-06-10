@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "haivelo-indexer",
       script: "lib/main.js",
-      cwd: "/var/www/haiVELO-VELO-LP-POOL-Indexer",
+      cwd: __dirname,
       instances: 1,
       autorestart: true,
       watch: false,
@@ -19,7 +19,7 @@ module.exports = {
     {
       name: "haivelo-graphql",
       script: "node_modules/.bin/squid-graphql-server",
-      cwd: "/var/www/haiVELO-VELO-LP-POOL-Indexer",
+      cwd: __dirname,
       instances: 1,
       autorestart: true,
       watch: false,
